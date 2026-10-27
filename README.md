@@ -1,314 +1,182 @@
-Worked for 3m 26s
+Worked for 33s
 
-I’ve reviewed your uploaded FY27 R&Q dashboard.xlsx file and recommend building a three-page Power BI report. The aim is to give management a quick overview, highlight engagement risks and control gaps, and retain the full Excel register for detailed review.
+Since you only have read permission on the SharePoint Excel file, we will use a slightly different approach. You do not need to edit the workbook, add Excel Tables, or change its formatting. All cleaning, formulas, calculated columns, KPI measures, charts and report formatting will be done inside Power BI Desktop and saved in your own Power BI report file.
 
-The most important design decision is to keep the report simple, formula-driven, and easy to refresh from SharePoint. You do not need lots of separate tables or complicated relationships to achieve this.
+Your original Excel workbook will remain unchanged.
 
-### 1\. What I found in your Excel file
+### Step 1 — Connect to the SharePoint Excel file
 
-Your workbook contains two sheets: `FY27 won jobs` and `Chart Data`.
-
-The main sheet has 53 engagement records across 29 columns, in rows 2–54. The legend is lower down the sheet, so it must not be included as engagement data. Your screenshot also shows an active Excel filter, so the rows currently visible are not necessarily all the records.
-
-Here are the main figures I calculated from the 53 records.
-
-Engagements
-
-### 53
-
-Total engagement value
-
-### USD 3.77M
-
-Distinct clients
-
-### 46
-
-Acceptance status requiring attention
-
-### 3
-
-The acceptance and risk distributions are:
-
-| Measure                            | Records |
-| ---------------------------------- | ------- |
-| Acceptance status: Approved        | 50      |
-| Acceptance status: In-Progress     | 2       |
-| Acceptance status: Action Required | 1       |
-| Low risk                           | 49      |
-| Medium risk                        | 3       |
-| High risk                          | 1       |
-
-There are also important control gaps in the data:
-
-| Control indicator                                 | Current count |
-| ------------------------------------------------- | ------------- |
-| Planning tasks blank or marked No                 | 47            |
-| LoE signed-date field blank or marked Not on file | 38            |
-| Workspace blank or marked No workspace            | 21            |
-| Creation date missing                             | 28            |
-
-These are useful starting points for your control page. They reflect the data currently in the workbook and will need to update dynamically in Power BI.
-
-I also found several data-quality issues:
-
-* Four columns are completely blank: `Pre PAC Date`, `JBR Active (Yes/No/N/A)`, `JBR Third Party eLearn - YES/NO`, and `UAT Application approved - Date`.
-
-* Several date-related fields contain mixtures of actual dates, text dates such as `8th April 2026`, and labels such as `N/A`, `Not on file`, `Withdrawn`, and `G/T`.
-
-* Some cells have special colours based on compliance-related conditions. The colours are not themselves data values that Power BI can automatically analyse.
-
-My recommendation: clean the data in Power Query, use a few dynamic DAX measures, and keep the main engagement table as the central data source.
-
-### 2\. The report I recommend building
-
-### Page 1 — FY27 Won Jobs Overview
-
-Purpose: Answer how many engagements were won, their value and where attention is needed.
-
-Four KPI cards, a monthly engagement trend, and a chart showing value by Engagement Leader.
-
-### Page 2 — Risk & Control Monitoring
-
-Purpose: Highlight missing information, outstanding control actions and risk.
-
-Four control KPI cards, one risk chart, and a compact table of engagements requiring attention.
-
-### Page 3 — Full Engagement Register
-
-Purpose: Let users find and inspect individual records.
-
-One table containing the original 29 fields, slicers, consistent date and currency formatting, and recreated compliance highlighting.
-
-This is enough for a useful management report without overcrowding the pages. Page 2 is the optional page you can retain or remove depending on how much control analysis management needs.
-
-### 3\. Step 1 — Prepare the Excel data
-
-Do this before connecting Power BI to SharePoint.
-
-### A. Convert the main data into an Excel Table
-
-* Open `FY27 R&Q dashboard.xlsx` in Excel.
-
-* Go to the `FY27 won jobs` sheet.
-
-* Click anywhere inside the engagement data.
-
-* Select Insert → Table, or press `Ctrl + T`.
-
-* Set the table range to `A1:AC54`.
-
-* Tick My table has headers and click OK.
-
-* Click inside the new table. Go to Table Design → Table Name and enter:
-
-    `tblFY27WonJobs`
-
-Make sure you include only the header and the 53 engagement records. Do not include the blank rows and the colour legend at the bottom.
-
-Excel Tables automatically expand when new records are added, making them more suitable for a refreshable Power BI report. Microsoft also documents how the Excel connector identifies workbook tables and worksheet data.
-
-### B. Standardise the headers
-
-I recommend renaming the following field in the source table:
-
-`Worskpace name` → `Workspace name`
-
-You can also standardise the extra spaces in `JBR Third Party eLearn - YES/NO`.
-
-Keep the remaining field names unless there is a good reason to change them. Clear any unnecessary Excel filters when checking record counts, although the presence of a filter does not mean the hidden records should be excluded from your Power BI report.
-
-### C. Decide how to handle the colours
-
-Your red, orange and blue legend means:
-
-| Colour | Meaning         |
-| ------ | --------------- |
-| Red    | Non compliance  |
-| Orange | Due for renewal |
-| Blue   | No information  |
-
-Power BI normally imports the cell values, not the business meaning of their Excel fill colours. You therefore need to represent the meaning explicitly in the data model before reproducing the colours in visuals.
-
-For example, create fields such as:
-
-* `Workspace Control Status`
-
-* `Planning Control Status`
-
-* `Expiry Control Status`
-
-You can derive workspace and planning statuses from their actual values. For the expiry status, use your organisation's agreed renewal window. For manually coloured exceptions, enter the corresponding text category in a dedicated status field rather than relying on cell fill alone.
-
-This is particularly important because the Excel colours apply to individual control cells, not necessarily to an entire engagement. A single overall flag could hide the fact that an engagement has several separate control issues.
-
-### 4\. Step 2 — Connect Power BI to the SharePoint workbook
-
-Use Power BI Desktop.
-
-### A. Connect to SharePoint
+### 1.1 Open Power BI Desktop
 
 * Open Power BI Desktop.
 
 * Select Home → Get data → More.
 
-* Search for SharePoint folder.
+* Search for `SharePoint folder`.
 
-* Select the connector and click Connect.
+* Select SharePoint folder, then click Connect.
 
-* Enter your SharePoint site URL, not the URL of the individual Excel file.
+* Enter your SharePoint site URL, not the direct link to the Excel file.
 
 For example:
 
 `https://yourcompany.sharepoint.com/sites/YourSiteName`
 
-* Sign in using your organisation's account.
+* Click OK.
 
-* Click Transform Data.
+* When prompted, select Organizational account and sign in with your work account.
 
-### B. Find the Excel workbook
+* Select Transform Data.
 
-The SharePoint Folder preview may show many files.
+Read-only access is sufficient to read data from a SharePoint source, provided your account has permission to access the relevant site and file.
+
+Microsoft's [SharePoint and Excel connectivity guidance](https://learn.microsoft.com/en-us/power-query/connectors/excel?utm_source=chatgpt.com) explains the supported ways to connect to Excel workbooks.
+
+### 1.2 Select the correct workbook
+
+You should now see a list of files from SharePoint.
 
 * Find the `Name` column.
 
-* Filter it to `FY27 R&Q dashboard.xlsx`.
+* Open its filter.
 
-* Check `Folder Path` to confirm you selected the correct SharePoint folder.
+* Select only `FY27 R&Q dashboard.xlsx`.
 
-* Use the workbook's `Content`/combine navigation to open its Excel objects.
+* Check the `Folder Path` column to confirm that you have the correct file.
 
-* Select `tblFY27WonJobs` if it is available.
+* In the `Content` column, open the file's Binary value.
 
-If you have not created the Excel Table, select the `FY27 won jobs` worksheet instead, and remove the extra blank and legend rows in Power Query.
+Do not select Combine Files unless you specifically intend to combine multiple workbooks. You need one workbook for this report.
 
-Important: select only the main engagement data for this query. Do not load the `Chart Data` sheet as a second production table just to get your charts. That sheet contains summary values stored as fixed values rather than formulas, so they will not automatically recalculate when the underlying records change.
+Power Query should display the contents of the workbook, including its worksheets.
 
-### 5\. Step 3 — Clean the data in Power Query
+* Find the row named `FY27 won jobs`.
 
-You should now be in the Power Query Editor.
+* Click the Table link in that row's `Data` column.
 
-Power Query is where you clean and prepare the data before building charts.
+You should now be looking at the contents of your engagement worksheet.
 
-### A. Filter out empty records
+### Step 2 — Clean the worksheet without editing Excel
 
-If you connected to the Excel Table, the legend should already be excluded.
+Everything in this section takes place inside the Power Query Editor.
 
-If you selected the worksheet:
+### 2.1 Use the first row as headers
+
+* Select Home → Use First Row as Headers if the column headings have not already been promoted.
+
+* Confirm that your columns include Client Name, Opportunity Name, Engagement Leader, Close Date, Amount, Acceptance Summary Status and Risk rating.
+
+You do not need to edit the original column headings in Excel.
+
+### 2.2 Remove the legend and blank rows
+
+Your worksheet contains the red, orange and blue legend underneath the engagement data. We must exclude that from the report.
 
 * Open the filter on `Client Name`.
 
-* Remove blank values.
+* Remove `(null)` or blank values.
 
-* Confirm the legend row is gone.
+* Remove `Legend`.
 
-* Check that the query has 53 engagement rows.
+* Check that the remaining records are actual engagements.
 
-### B. Clean text fields
+The initial data contains 53 engagement records. The final row count in Power Query should be 53 before any other deliberate filtering.
 
-Select the relevant text columns and use Transform → Format → Trim. This removes unnecessary leading and trailing spaces.
+This approach also avoids counting your compliance legend as a client.
 
-You should retain text such as `N/A`, `Not on file`, and `Withdrawn` where it represents the original business status. Do not change every such value to `No`, because that would confuse missing information with a negative status.
+### 2.3 Rename the query and one column
 
-### C. Set sensible data types
+In the Query Settings pane, rename the query to:
 
-Use the following rules:
+`FY27 won jobs`
 
-| Fields                                                   | Recommended treatment                                     |
-| -------------------------------------------------------- | --------------------------------------------------------- |
-| Amount                                                   | Fixed decimal number; format as USD currency in the model |
-| Close Date                                               | Date                                                      |
-| Client Name, Opportunity Name                            | Text                                                      |
-| Engagement Leader, Engagement Manager                    | Text                                                      |
-| Acceptance Summary Status, Risk rating                   | Text                                                      |
-| Independence Restriction Status, AFS                     | Text                                                      |
-| Workspace name, Planning tasks approved                  | Text                                                      |
-| LoE, approval, expiry and other mixed date/status fields | Preserve the original values as text initially            |
+If your imported column name is still misspelled as `Worskpace name`, right-click it and select Rename. Enter:
 
-The last row matters: your file contains text and numbers mixed within some date-related columns. Converting all these columns directly to Date could generate errors or lose labels that need to be investigated.
+`Workspace name`
 
-For the `Close Date` column, select the column and choose Transform → Data Type → Date.
+This change applies only to the Power BI query, not the SharePoint workbook.
 
-For other date columns that you later want to analyse, create separate clean date fields. If you use Change Type → Using Locale, select an appropriate locale such as English (United Kingdom) for the written dates. Microsoft's Power Query guidance explains why locale affects how text is interpreted as a date.
+### 2.4 Clean the text fields
 
-### D. Create a status using a formula
+Select the text columns that commonly contain names or statuses. You can Ctrl-click several columns to select them together.
 
-For example, to distinguish missing workspace information from a recorded workspace, select Add Column → Custom Column.
+Then use:
 
-Name the column `Workspace Control Status` and use this Power Query formula:
+Transform → Format → Trim
 
-```powerquery
-if [Workspace name] = null
-    or Text.Trim([Workspace name]) = ""
-then "No information"
-else if Text.Upper(Text.Trim([Workspace name])) = "NO WORKSPACE"
-then "Non compliance"
-else "Recorded"
-```
+This removes unnecessary spaces around text, helping prevent values such as `Approved` and `Approved` from being treated differently.
 
-Similarly, create a `Planning Control Status` column:
+Retain labels such as `N/A`, `Not on file` and `Withdrawn` where they carry meaning. Do not automatically replace every one with `No`, because they may represent different situations.
 
-```powerquery
-if [Planning tasks approved] = null
-    or Text.Trim([Planning tasks approved]) = ""
-then "No information"
-else if Text.Upper(Text.Trim([Planning tasks approved])) = "NO"
-then "Non compliance"
-else "Compliant"
-```
+### 2.5 Set the data types carefully
 
-These formulas create text categories that Power BI can filter, count and colour. They are also preferable to trying to extract meaning from cell formatting.
+Use the following settings as your starting point.
 
-For expiry-related colours, do not invent a renewal threshold. Agree the actual renewal window with the R&Q process owner first, or explicitly encode the existing classifications in the source data.
+| Column                          | Data type                              |
+| ------------------------------- | -------------------------------------- |
+| Client Name                     | Text                                   |
+| Opportunity Name                | Text                                   |
+| Engagement Leader               | Text                                   |
+| Engagement Manager              | Text                                   |
+| Close Date                      | Date                                   |
+| Amount                          | Decimal number or Fixed decimal number |
+| Acceptance Summary Status       | Text                                   |
+| Risk rating                     | Text                                   |
+| Independence Restriction Status | Text                                   |
+| AFS                             | Text                                   |
+| Workspace name                  | Text                                   |
+| Mixed date/status fields        | Text initially                         |
 
-### E. Finish the cleaning
+The mixed fields include items such as `LoE (client signed date)`, `CA Approval Expiry`, `EA Approval`, `JBR - Approval date` and `Creation date`.
 
-* Rename the query to `FY27 won jobs` in the Query Settings pane.
+Some of these columns contain dates, while others contain text labels or blanks. Setting them all directly to Date could produce errors.
 
-* Check that `Amount` is numeric and `Close Date` is a date.
+For `Close Date`, select the column and choose Transform → Data Type → Date.
 
-* Keep the original status fields so the full register remains auditable.
+For `Amount`, select Decimal Number. If the values import as text because they include currency symbols or commas within the stored value, clean those characters first and then convert the column to a number.
 
-* Select Home → Close & Apply.
+You can leave other mixed date/status columns as text until you decide which ones need genuine date calculations.
 
-### 6\. Step 4 — Create the basic measures
+### 2.6 Apply the changes
 
-Measures are calculations that respond to slicers and filters. This is exactly what you need for KPI cards and charts. Microsoft explains how measures work in Power BI and how they are used in reports.
+Once you have cleaned the records, renamed the query and set the data types, click:
 
-Go to Report view or Data view, select the `FY27 won jobs` table, and choose Modeling → New measure.
+Home → Close & Apply
 
-Create the following measures one at a time.
+Power BI will load the cleaned data into your report.
 
-### Measure 1 — Engagement count
+At this point, you have not changed the original Excel file.
+
+### Step 3 — Create your KPI measures using DAX
+
+Next, we will create calculations inside Power BI. These measures will update when users apply slicers.
+
+Select the `FY27 won jobs` table in the Data pane. Go to Modeling → New measure and enter each formula below separately.
+
+### 3.1 Total engagements
 
 ```dax
 Engagement Count =
 COUNTROWS('FY27 won jobs')
 ```
 
-Expected current result: 53.
-
-### Measure 2 — Total value
+### 3.2 Total engagement value
 
 ```dax
 Total Value =
 SUM('FY27 won jobs'[Amount])
 ```
 
-Expected current result: approximately USD 3.77 million.
+Select this measure and set its format to Currency, using USD if that is the currency represented by your workbook.
 
-Select this measure and set its format to Currency. Use USD if that is the agreed currency for your source data.
-
-### Measure 3 — Unique clients
+### 3.3 Unique clients
 
 ```dax
 Unique Clients =
 DISTINCTCOUNT('FY27 won jobs'[Client Name])
 ```
 
-Expected current result: 46.
-
-### Measure 4 — Approved engagements
+### 3.4 Approved engagements
 
 ```dax
 Approved Engagements =
@@ -318,22 +186,108 @@ CALCULATE(
 )
 ```
 
-Expected current result: 50.
-
-### Measure 5 — Acceptance requiring attention
+### 3.5 Acceptance requiring attention
 
 ```dax
 Acceptance Attention =
 [Engagement Count] - [Approved Engagements]
 ```
 
-Expected current result: 3.
+For the workbook you supplied, the expected initial results are:
 
-These five measures will cover all the overview KPI cards.
+| Measure              | Expected value                 |
+| -------------------- | ------------------------------ |
+| Engagement Count     | 53                             |
+| Total Value          | Approximately USD 3.77 million |
+| Unique Clients       | 46                             |
+| Approved Engagements | 50                             |
+| Acceptance Attention | 3                              |
 
-### Create four control measures for Page 2
+These are checks against your starting workbook. If a figure differs, verify that the legend was excluded, the Amount column is numeric and no unintended filters remain.
 
-Planning unresolved
+### Step 4 — Build Page 1: Overview
+
+Rename the first report page `Overview`.
+
+This page should answer four questions: How many engagements have we won? What is their total value? How many clients are represented? Which acceptance records need attention?
+
+### 4.1 Add four KPI cards
+
+Choose the Card visual from the Visualizations pane. Add these measures, one card at a time.
+
+Total engagements
+
+### 53
+
+Total value
+
+### USD 3.77M
+
+Unique clients
+
+### 46
+
+Acceptance attention
+
+### 3
+
+Illustrative layout using the starting workbook figures. The real cards will use your Power BI measures.
+
+Arrange the cards horizontally near the top of the page.
+
+### 4.2 Add engagements by month
+
+* Select Clustered column chart.
+
+* Drag `Close Date` to the X-axis.
+
+* Use the date hierarchy, selecting the Month level and retaining Year where appropriate.
+
+* Drag `Engagement Count` to the Y-axis.
+
+* Rename the visual `Engagements by Close Month`.
+
+This will show how the number of engagements changes across close months.
+
+### 4.3 Add value by Engagement Leader
+
+* Add a Clustered bar chart.
+
+* Drag `Engagement Leader` to the Y-axis.
+
+* Drag `Total Value` to the X-axis.
+
+* Sort by `Total Value`, descending.
+
+* In the visual-level filters, set `Engagement Leader` to Top N, enter 5 and select `Total Value` as the value used for ranking.
+
+Rename it `Top 5 Engagement Leaders by Value`.
+
+### 4.4 Add slicers
+
+Add three slicers:
+
+* `Close Date`
+
+* `Engagement Leader`
+
+* `Acceptance Summary Status`
+
+Arrange them along the side or underneath the report title. Use a date-range slicer for Close Date if you want users to select a period.
+
+Keep the Overview page to four cards, two charts and these three slicers.
+
+### Step 5 — Build Page 2: Risk & Controls
+
+Create a new page using the plus sign at the bottom and rename it `Risk & Controls`.
+
+This page will concentrate on risk and missing information.
+
+### 5.1 Create four additional measures
+
+Choose Modeling → New measure for each formula.
+
+### Planning unresolved
 
 ```dax
 Planning Unresolved =
@@ -342,12 +296,15 @@ CALCULATE(
     FILTER(
         'FY27 won jobs',
         ISBLANK('FY27 won jobs'[Planning tasks approved])
-            || 'FY27 won jobs'[Planning tasks approved] = "No"
+            || TRIM('FY27 won jobs'[Planning tasks approved]) = ""
+            || UPPER(
+                TRIM('FY27 won jobs'[Planning tasks approved])
+            ) = "NO"
     )
 )
 ```
 
-LoE evidence gap
+### LoE evidence gap
 
 ```dax
 LoE Evidence Gap =
@@ -356,15 +313,15 @@ CALCULATE(
     FILTER(
         'FY27 won jobs',
         ISBLANK('FY27 won jobs'[LoE (client signed date)])
-            || 'FY27 won jobs'[LoE (client signed date)] = ""
-            || 'FY27 won jobs'[LoE (client signed date)] = "Not on file"
+            || TRIM('FY27 won jobs'[LoE (client signed date)]) = ""
+            || UPPER(
+                TRIM('FY27 won jobs'[LoE (client signed date)])
+            ) = "NOT ON FILE"
     )
 )
 ```
 
-Keep that original LoE field as text for this measure, since it contains both dates and labels.
-
-Workspace absent
+### Workspace absent
 
 ```dax
 Workspace Absent =
@@ -373,13 +330,15 @@ CALCULATE(
     FILTER(
         'FY27 won jobs',
         ISBLANK('FY27 won jobs'[Workspace name])
-            || 'FY27 won jobs'[Workspace name] = ""
-            || 'FY27 won jobs'[Workspace name] = "No workspace"
+            || TRIM('FY27 won jobs'[Workspace name]) = ""
+            || UPPER(
+                TRIM('FY27 won jobs'[Workspace name])
+            ) = "NO WORKSPACE"
     )
 )
 ```
 
-Creation date missing
+### Creation date missing
 
 ```dax
 Creation Date Missing =
@@ -392,105 +351,35 @@ CALCULATE(
 )
 ```
 
-Expected results from the supplied data are 47, 38, 21 and 28, respectively. Validate these when you finish Power Query cleaning. If you later convert the original fields to dates, preserve the original text or create separate clean date columns so these checks still work.
+These formulas assume the relevant source fields have been set to Text in Power Query. The creation-date measure above counts true blanks; if the field also uses text such as `N/A`, you can expand the definition to include those labels as well.
 
-### 7\. Step 5 — Build Page 1: FY27 Won Jobs Overview
+The initial workbook review indicated approximately 47 planning records unresolved, 38 LoE evidence gaps, 21 missing workspaces and 28 missing creation dates. Check the measures against the imported values, because the final results depend on how the original labels are stored.
 
-Create a report page and rename it `Overview`.
+### 5.2 Add the control KPI cards
 
-### A. Add four KPI cards
+Add the four measures as separate Card visuals across the top.
 
-In the Visualizations pane, choose the Card visual. Create four cards using:
+Label them clearly. For example, `Workspace Absent` is more informative than simply labelling the card `Workspace`.
 
-| Card title           | Measure              |
-| -------------------- | -------------------- |
-| Total engagements    | Engagement Count     |
-| Total value          | Total Value          |
-| Unique clients       | Unique Clients       |
-| Acceptance attention | Acceptance Attention |
+Remember that a blank field can indicate missing information rather than a confirmed compliance failure. Keep these concepts distinct.
 
-Arrange the cards in a single row near the top of the page.
-
-### B. Add the monthly engagement chart
-
-* Select an empty area of the page.
-
-* Choose a Clustered column chart.
-
-* Drag `Close Date` to the X-axis.
-
-* Select the date hierarchy and use the Month level, with Year retained if necessary.
-
-* Drag `Engagement Count` to the Y-axis.
-
-* Title the chart `Engagements by Close Month`.
-
-This will show the number of engagements closed in each month. The current records cover July to October 2026, with August having the highest count.
-
-### C. Add the value-by-leader chart
+### 5.3 Add risk distribution
 
 * Add a Clustered bar chart.
 
-* Drag `Engagement Leader` to the Y-axis.
+* Drag `Risk rating` to the Y-axis.
 
-* Drag `Total Value` to the X-axis.
+* Drag `Engagement Count` to the X-axis.
 
-* Sort the chart by `Total Value` in descending order.
-
-* In the visual-level filters, apply a Top N filter to `Engagement Leader`, set it to Top 5, and use `Total Value` as the value.
-
-Title it `Top 5 Engagement Leaders by Value`.
-
-This focuses attention on the largest engagement values rather than trying to show all 16 leaders on one crowded chart.
-
-### D. Add three slicers
-
-Add these slicers in a compact row beneath the title or beside the charts:
-
-* `Close Date`
-
-* `Engagement Leader`
-
-* `Acceptance Summary Status`
-
-For `Close Date`, use the Between slicer if you want users to select a date range.
-
-Keep this page to four cards and two charts. The risk distribution and detailed compliance checks are more useful on Page 2.
-
-### 8\. Step 6 — Build Page 2: Risk & Control Monitoring
-
-Create a new page and rename it `Risk & Controls`.
-
-### A. Add four control KPI cards
-
-Use the four measures you created:
-
-| Card                  | Measure               | Current expected result |
-| --------------------- | --------------------- | ----------------------- |
-| Planning unresolved   | Planning Unresolved   | 47                      |
-| LoE evidence gap      | LoE Evidence Gap      | 38                      |
-| Workspace absent      | Workspace Absent      | 21                      |
-| Creation date missing | Creation Date Missing | 28                      |
-
-Label these cards carefully. For example, a blank planning field means not recorded, not necessarily that the engagement has failed compliance.
-
-### B. Add the risk chart
-
-* Add a Clustered bar chart.
-
-* Put `Risk rating` on the Y-axis.
-
-* Put `Engagement Count` on the X-axis.
-
-* Sort by the count, descending.
+* Sort by count in descending order.
 
 * Title the chart `Engagements by Risk Rating`.
 
-It should show 49 Low, 3 Medium and 1 High for the current dataset.
+The expected initial split is 49 Low, 3 Medium and 1 High.
 
-### C. Add an exception-review table
+### 5.4 Add the exception table
 
-Add a compact Table visual containing only these fields:
+Create a compact Table visual with:
 
 * Client Name
 
@@ -508,49 +397,100 @@ Add a compact Table visual containing only these fields:
 
 * LoE (client signed date)
 
-This gives users enough context to investigate the controls without putting all 29 columns on the overview page.
+Use the filters pane to focus this visual on records requiring attention. This table will give management enough information to identify the engagement without displaying all 29 fields on this page.
 
-Use the relevant status fields and visual filters to focus the table on missing information or exceptions. As you build out further control flags, you can filter for `Non compliance` and `No information` explicitly.
+### Step 6 — Reproduce the red, orange and blue compliance highlighting
 
-### D. Recreate the red, orange and blue formatting
+This is the main limitation to account for because you cannot edit the source workbook.
 
-After adding the relevant status fields, you can colour the control columns in Power BI:
+Power BI imports the underlying worksheet values, but the standard Excel/Power Query connection does not automatically convert cell background colours into data fields.
 
-* Select the table visual.
+Your existing legend means:
 
-* Open the dropdown beside the relevant status field in the visual's field list.
+| Colour | Meaning         |
+| ------ | --------------- |
+| Red    | Non compliance  |
+| Orange | Due for renewal |
+| Blue   | No information  |
 
-* Choose Conditional formatting → Background color.
+Power BI cannot automatically determine that a particular cell was red, orange or blue if that information exists only in its Excel fill colour.
 
-* Use Rules or Field value, depending on how you represent the colours.
+You can still reproduce the colouring without modifying the SharePoint workbook, using one of two approaches.
 
-* Map `Non compliance` to red, `Due for renewal` to orange, and `No information` to blue.
+### Option A — Derive the status from the cell value
 
-Repeat this for the relevant control columns.
+This is the best approach whenever the text already tells you the status.
 
-This reproduces the legend as a report feature based on actual values instead of relying on Excel's background colours.
+For example, select `Workspace name`, then use Add Column → Custom Column in Power Query.
 
-### 9\. Step 7 — Build Page 3: Full Engagement Register
+Name the new column `Workspace Control Status` and enter:
 
-Create another page named `Engagement Register`.
+```powerquery
+if [Workspace name] = null then
+    "No information"
+else if Text.Trim([Workspace name]) = "" then
+    "No information"
+else if Text.Upper(Text.Trim([Workspace name])) = "NO WORKSPACE" then
+    "Non compliance"
+else
+    "Recorded"
+```
 
-Your goal here is to reproduce the Excel register as closely as is practical, while making it easier to search and filter.
+You can do the same for `Planning tasks approved`, mapping blanks to `No information` and a recorded `No` to `Non compliance`.
 
-### A. Create the table
+For expiry dates, create an appropriate renewal flag only after confirming the organisation's actual renewal window. For example, do not assume that renewal is due within 30 days unless that is the agreed rule.
+
+### Option B — Store the existing colour classifications inside Power BI
+
+Where the background colour is the only indication of status, you will need to maintain that information separately.
+
+You can use Home → Enter data to create a small mapping table in Power BI, containing fields such as:
+
+| Engagement key               | Control field | Status          |
+| ---------------------------- | ------------- | --------------- |
+| Unique engagement identifier | Workspace     | Non compliance  |
+| Unique engagement identifier | AFS           | Due for renewal |
+| Unique engagement identifier | Planning      | No information  |
+
+Populate this mapping using the affected records and the classifications shown in Excel. You can then connect the mapping to the main engagement data and use the statuses for filtering and conditional formatting.
+
+This requires manual maintenance when the source classifications change or new engagements are added. If the file owner can eventually provide explicit status fields, that would be a more reliable long-term option.
+
+### Apply the colours to a Power BI table
+
+Once the status fields exist:
+
+* Select the relevant Table visual.
+
+* Open the dropdown beside the relevant field.
+
+* Select Conditional formatting → Background color.
+
+* Choose Rules or Field value.
+
+* Set the mapping: Non compliance to red, Due for renewal to orange, and No information to blue.
+
+Repeat for the other applicable control fields. See Microsoft's [conditional formatting instructions](https://learn.microsoft.com/en-us/power-bi/desktop-conditional-table-formatting?utm_source=chatgpt.com) for details.
+
+### Step 7 — Build Page 3: Full Engagement Register
+
+Create another report page and rename it `Engagement Register`.
 
 * Add a Table visual.
 
-* Add all 29 original fields in the same order as the Excel sheet.
+* Add all 29 fields from `FY27 won jobs`.
 
-* Keep the columns in the order shown in the source workbook, from `Client Name` through `RSD`.
+* Arrange the columns in the same order as the original Excel register.
 
-* Apply currency formatting to `Amount` and date formatting to `Close Date`.
+* Format `Close Date` as a date and `Amount` as currency.
 
-* Resize the columns so that key identifiers are easy to read.
+* Apply conditional formatting to the relevant status fields.
 
-Because there are 29 fields, the table will require horizontal scrolling. This is preferable to making each column so narrow that nobody can read it.
+* Adjust the widths so the key columns are readable.
 
-Keep the page mostly dedicated to the table. Put three compact slicers above it:
+The table will require horizontal scrolling. That is expected with 29 fields; avoid shrinking the text excessively just to fit everything at once.
+
+Add three slicers above the table:
 
 * Engagement Leader
 
@@ -558,92 +498,70 @@ Keep the page mostly dedicated to the table. Put three compact slicers above it:
 
 * Risk rating
 
-Use the same control-status colours you established on Page 2 where appropriate.
+You can keep the page dedicated mostly to the register rather than adding charts that repeat information already shown on the other pages.
 
-### B. Synchronise common slicers
+### Synchronise the common slicers
 
-To keep filtering consistent across pages:
+If you want selections to carry across the report:
 
 * Select a slicer on the Overview page.
 
-* Go to View → Sync slicers.
+* Open View → Sync slicers.
 
-* In the Sync slicers pane, enable syncing to the other relevant report pages.
+* Enable synchronization for the other pages where the same filter should apply.
 
-* Repeat for the slicers you want to share.
+* Repeat for the other relevant slicers.
 
-This way, a user selecting a particular engagement leader on the Overview page can continue to work with the same selection on the other pages.
+### Step 8 — Make future refreshes and additional sheets manageable
 
-### 10\. Step 8 — Make future refreshes and additional sheets easier
+Because you cannot create Excel Tables in the source workbook, connect directly to the worksheet as described in Step 1.
 
-This is especially important because you mentioned that more worksheets will be added to the Excel file later.
+There are two different scenarios.
 
-There are two different situations.
+When more rows are added to `FY27 won jobs`: refresh the Power BI data and check that the new records appear. Since you are importing a worksheet rather than an Excel Table, test this after the first few rows are added. If the connection does not pick up new rows correctly, the more robust fix would be for the workbook owner to convert the range to an Excel Table.
 
-Situation A: More rows are added to `FY27 won jobs`.
+When an additional worksheet is added: Power BI will not automatically create a new data model table and report page for it. You will need to add the new worksheet as another Power Query query.
 
-Since the data is stored in `tblFY27WonJobs`, new engagement rows will be included when the query refreshes. The existing measures, charts and slicers will continue to work without rebuilding the page.
+Use this repeatable process:
 
-Situation B: A new worksheet is added to the workbook.
+* Open Home → Transform data.
 
-Power BI will not automatically create a new data model table and report page for an arbitrary new worksheet. You will need to add a query for that worksheet and decide how it should be visualised.
+* Create another query from the same SharePoint workbook connection.
 
-Use this repeatable process for each future worksheet:
+* Select the newly added worksheet.
 
-* In Excel, turn the new sheet's data range into its own Excel Table with a unique name, proper column headers and no legend or notes inside the data.
+* Promote headers, clean its values and set data types in Power Query.
 
-* In Power BI Desktop, open Transform Data and create a query for that new table from the existing workbook connection.
+* Rename the query to describe its contents.
 
-* Give the new query a meaningful name.
+* Select Close & Apply.
 
-* Clean the new table's data types and fields.
+* Create a new report page and build visuals using that query's fields.
 
-* If the new sheet is standalone, keep it as its own table. Do not create relationships simply because it lives in the same workbook.
+If the new worksheet is independent, keep it as a standalone table. You do not need to create a relationship to `FY27 won jobs` unless the analysis genuinely requires one.
 
-* Duplicate an existing report page as a starting point, replace the old visual fields with fields from the new table, and rename the page.
+If several future worksheets contain the same kind of data and have the same column structure, you can consider appending them into a single query instead of creating multiple separate tables.
 
-* If two future sheets have the same column structure and represent the same kind of information, consider appending them into one table instead of creating separate tables.
+The key point is that your Power BI report and transformations are separate from the SharePoint workbook. You can develop the model and visuals without write permission on the source.
 
-The goal is to have one reusable method for loading new worksheet tables, while keeping the model simple. You do not need to load every worksheet into Power BI immediately.
+### Step 9 — Refresh, save and publish
 
-### 11\. Step 9 — Check the report before publishing
+* Save your work as `FY27 RQ Dashboard.pbix` on your computer.
 
-Before you publish, compare Power BI against Excel.
+* Select Home → Refresh and check that the figures still reconcile with the Excel workbook.
 
-Use the following checklist.
+* Confirm the 53 initial records are being counted correctly.
 
-Final validation
+* Publish the report to your Power BI workspace when ready.
 
-0 of 12
+* In Power BI Service, confirm the data-source credentials are configured using your organisational account.
 
-Engagement Count shows 53
+* Test a refresh to ensure Power BI can continue reading the SharePoint file.
 
-Total Value shows approximately USD 3.77 million
+Your account's read permission must remain valid for subsequent refreshes. Publishing the report does not grant other users access to the original SharePoint workbook.
 
-Unique Clients shows 46
+### The order I recommend
 
-Approved engagements shows 50
+Start with Step 1 through Step 4 to create the connection, clean the data and finish the Overview page. Next, build the Risk & Controls page and create the missing-information measures. Finish with the full register and compliance colours.
 
-Acceptance Attention shows 3
-
-Planning Unresolved shows 47
-
-LoE Evidence Gap shows 38
-
-Workspace Absent shows 21
-
-Creation Date Missing shows 28
-
-The legend and blank rows are not included as engagements
-
-The original date/status text is not lost during cleaning
-
-Red, orange and blue indicators are represented by data fields
-
-Once this works, select Home → Publish and publish the report to your Power BI workspace. Configure the semantic model's data-source credentials and test a refresh so the SharePoint source continues to update.
-
-### My final recommendation
-
-Start with Page 1 and Page 3 first. They will give you a working executive overview and a usable engagement register. Then build Page 2 using the four control measures and risk chart.
-
-One final caution: the current Excel workbook contains a mix of true dates and textual status values in several date-related columns. Preserve those original fields, and only create clean date columns where you need calculations such as expiry or renewal analysis. That will make the report more reliable and reduce the risk of hiding real exceptions during data cleaning.
+That gives you a usable first report without editing the source Excel file or loading unnecessary helper tables.
